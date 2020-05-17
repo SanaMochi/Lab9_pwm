@@ -42,7 +42,7 @@ void PWM_off() {
 	TCCR3A = 0x00;
 }
 
-enum States_off {start, wait, on, onFall, inc, incFall, dec, decFall, off, offFall, incOff, incFallOff, decOff, decFallOff} state;
+enum States_off {start, wait, on, onFall, inc, incFall, dec, decFall, off, offFall/*, incOff, incFallOff, decOff, decFallOff*/} state;
 
 unsigned char A;
 unsigned short notes[8] = {0x105, 0x125, 0x149, 0x15D, 0x188, 0x1B8, 0x1ED, 0x20B};
@@ -63,8 +63,8 @@ void Tick() {
 			else if (A == 0x01 && pwr) state = off;
 			else if (A == 0x02 && pwr) state = inc;
 			else if (A == 0x04 && pwr) state = dec;
-			else if (A == 0x02 && !pwr) state = incOff;
-                        else if (A == 0x04 && !pwr) state = decOff;
+//			else if (A == 0x02 && !pwr) state = incOff;
+//                      else if (A == 0x04 && !pwr) state = decOff;
 			else state = wait; 
 			break;
 		case on:
@@ -94,7 +94,8 @@ void Tick() {
                 case offFall:
                         if (A) state = offFall;
                         else state = wait;
-                case incOff:
+                	break;
+/*		case incOff:
                         state = incFall;
                         break;
                 case incFallOff:
@@ -108,7 +109,7 @@ void Tick() {
                         if (A == 0x04) state = decFall;
                         else state = wait;
                         break;
-		default:
+*/		default:
 		    	state = start;	
 			break;
 	}
@@ -139,7 +140,7 @@ void Tick() {
 			pwr = 0x00;
                         break;
                 case offFall: break;
-                case incOff:
+/*                case incOff:
                         if (i < 7) ++i;
                         break;
                 case incFallOff: break;
@@ -147,7 +148,7 @@ void Tick() {
                         if (i > 0) --i;
                         break;
                 case decFallOff: break;
-
+*/
 		default: break;
 
 	}

@@ -1,7 +1,7 @@
 /*	Author: sana
  *  Partner(s) Name: 
  *	Lab Section:
- *	Assignment: Lab #9  Exercise #3
+ *	Assignment: Lab #9  Exercise #1
  *	Exercise Description: [optional - include for your own benefit]
  *
  *	I acknowledge all content contained herein, excluding template or example
@@ -10,7 +10,6 @@
 #include <avr/io.h>
 #ifdef _SIMULATE_
 #include "simAVRHeader.h"
-#include "../header/timer.h"
 #endif
 
 void set_PWM(double frequency) {
@@ -42,40 +41,34 @@ void PWM_off() {
 	TCCR3A = 0x00;
 }
 
-enum States_off {start, off, on, onBeat, wait} state;
+
+enum States {start, wait, c4, d4, e4} state;
 
 unsigned char A;
-//EEFGGFEDCCDEEDD
-unsigned short notes[15] = {0x149, 0x149, 0x15D, 0x188, 0x188, 0x15D, 0x149, 0x125, 0x105, 0x105, 0x125, 0x149, 0x149, 0x125, 0x125};
-//	0x105, 0x125, 0x149, 0x15D, 0x188, 0x1B8, 0x1ED, 0x20B
-unsigned char time[15] = {2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 4};
-unsigned char i = 0x00;
-unsigned char t = 0x00;
 
 void Tick() {
 
 	switch(state) {
 		case start:
 			state = wait;
-			set_PWM(0x00);
-			i = 0x00;
-			break;
-		case off:
-			if (A) state = on;
-			else state = off;
-			break;
-		case on:
-			state = onBeat;
-			break;
-		case onBeat:
-			if (t <= time[i]) state = onBeat;
-			else if (i > 15 && !A) {state = off; set_PWM(0x00);}
-			else if (i > 15 && A) {state = wait; set_PWM(0x00);}
-			else {state = on; i++; set_PWM(0x00);}
 			break;
 		case wait:
-			if (A) state = wait;
-			else state = off;
+			if (A == 0x01) state = c4;
+			else if (A == 0x02) state = d4;
+			else if (A == 0x04) state = e4;
+			else state = wait; 
+			break;
+		case c4: 
+			if (A == 0x01) state = c4;
+			else state = wait;
+			break;
+		case d4:
+			if (A == 0x02) state = d4;
+			else state = wait;
+			break;
+		case e4:
+			if (A == 0x04) state = e4;
+			else state = wait;
 			break;
 		default:
 		    	state = start;	
@@ -84,20 +77,18 @@ void Tick() {
 
 	switch(state) {
 		case start: break;
-		case off:
+                case wait:
 			set_PWM(0x00);
-			i = 0x00;
-			t = 0x00;
-			break;
-		case on:
-			set_PWM(notes[i]);
-			break;
-		case onBeat:
-			t++;
-			break;
-		case wait:	
-			set_PWM(0x00);
-			break;
+                        break;
+                case c4:
+			set_PWM(0x105);
+                        break;
+                case d4:
+			set_PWM(0x125);
+                        break;
+                case e4:
+			set_PWM(0x149);
+                        break;
 		default: break;
 
 	}
@@ -111,14 +102,11 @@ int main(void) {
 	state = start;
 	PWM_on();
     
-	TimerSet(250);
-	TimerOn();
-	
 	while (1) {
-		A = ~PINA & 0x01;
+		A = ~PINA & 0x07;
+//		PWM_on();
 		Tick();
-		while (!TimerFlag);
-		TimerFlag = 0;
+//		set_PWM(0x149);
 	}
     PWM_off();
     return 1;

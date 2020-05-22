@@ -73,6 +73,7 @@ void Tick() {
 		case onFall:
 			if (A) state = onFall;
 			else state = wait;
+			break;
 		case inc:
 			state = incFall;
 			break;
